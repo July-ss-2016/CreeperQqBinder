@@ -60,6 +60,13 @@ public class CreeperQqBinder extends JavaPlugin {
 
     // 初始化MySQL
     public boolean initSql() {
+        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
+
+        if (sqlManager.getCon() == null) {
+            MsgUtil.warring("MySQL连接失败.");
+            return false;
+        }
+
         try {
             for (String subTableName : aSubTableName) {
                 if (!sqlManager.isExistsTable(settings.getTablePrefix() + subTableName)) {
@@ -71,13 +78,6 @@ public class CreeperQqBinder extends JavaPlugin {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
-        }
-
-        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
-
-        if (sqlManager.getCon() == null) {
-            MsgUtil.warring("MySQL连接失败.");
             return false;
         }
 
