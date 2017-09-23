@@ -1,11 +1,7 @@
-name: CreeperQqBuilder
-main: vip.creeper.mcserverplugins.creeperqqbuilder.CreeperQqBuilder
+name: CreeperQqBinder
+main: vip.creeper.mcserverplugins.creeperqqbinder.CreeperQqBinder
 author: July_ss
 version: 1.0.0
 commands:
   cqb:
   ocqb:
-#构思
-#player_name, qq, bound_date
-#player_name, ver_code, qq
-# bind July_ss

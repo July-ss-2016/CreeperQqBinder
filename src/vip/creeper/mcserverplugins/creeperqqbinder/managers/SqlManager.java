@@ -40,6 +40,10 @@ public class SqlManager {
         return this.con;
     }
 
+    public void setCon(final Connection con) {
+        this.con = con;
+    }
+
     public void closeSql() {
         try {
             con.close();

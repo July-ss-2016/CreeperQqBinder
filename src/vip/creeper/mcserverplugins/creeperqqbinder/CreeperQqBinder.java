@@ -1,12 +1,16 @@
 package vip.creeper.mcserverplugins.creeperqqbinder;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import vip.creeper.mcserverplugins.creeperqqbinder.commands.OpCommand;
+import vip.creeper.mcserverplugins.creeperqqbinder.commands.PlayerCommand;
 import vip.creeper.mcserverplugins.creeperqqbinder.managers.QqBinderManager;
 import vip.creeper.mcserverplugins.creeperqqbinder.managers.SqlManager;
 import vip.creeper.mcserverplugins.creeperqqbinder.utils.MsgUtil;
 import vip.creeper.mcserverplugins.creeperqqbinder.utils.SqlUtil;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -17,17 +21,52 @@ public class CreeperQqBinder extends JavaPlugin {
     private Settings settings;
     private SqlManager sqlManager;
     private QqBinderManager qqBinderManager;
+    private String[] aSubTableName = {"playerdata", "verification"};
 
     public void onEnable() {
         instance = this;
         this.settings = new Settings();
-        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
         this.qqBinderManager = new QqBinderManager(this);
 
+        loadConfig();
+
+        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
+
         if (sqlManager.getCon() == null) {
-            MsgUtil.info("MySQL连接失败!");
+            MsgUtil.warring("MySQL连接失败.");
             setEnabled(false);
+            return;
         }
+
+        registerCommands();
+        initSql();
+        runTaskReConnectTask();
+        MsgUtil.warring("MySQL初始化完毕.");
+        MsgUtil.warring("MySQL重连任务已创建.");
+        MsgUtil.warring("插件初始化完毕!");
+    }
+
+    public void onDisable() {
+        Bukkit.getScheduler().cancelTasks(this);
+        sqlManager.closeSql();
+    }
+
+    private void runTaskReConnectTask() {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> Bukkit.getScheduler().runTask(instance, () -> {
+            Connection con = SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword());
+
+            if (con == null) {
+                MsgUtil.warring("MySQL重连失败.");
+            } else {
+                sqlManager.setCon(con);
+                MsgUtil.info("MySQL重连成功.");
+            }
+        }), 432000L,432000L);
+    }
+
+    private void registerCommands() {
+        getCommand("cqb").setExecutor(new PlayerCommand(this));
+        getCommand("ocqb").setExecutor(new OpCommand(this));
     }
 
     public static CreeperQqBinder getInstance() {
@@ -46,10 +85,16 @@ public class CreeperQqBinder extends JavaPlugin {
         return settings;
     }
 
+    // 初始化MySQL
     public void initSql() {
         try {
-            if (!sqlManager.isExistsTable(settings.getTableName())) {
-
+            for (String subTableName : aSubTableName) {
+                if (!sqlManager.isExistsTable(settings.getTablePrefix() + subTableName)) {
+                    if (!sqlManager.executeStatement("create table " + settings.getTablePrefix() + subTableName + "(player_name varchar(32), qq varchar(32))")) {
+                        MsgUtil.warring(subTableName + " 表创建失败!");
+                        setEnabled(false);
+                    }
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -66,6 +111,6 @@ public class CreeperQqBinder extends JavaPlugin {
         settings.setDatabase(config.getString("mysql.database"));
         settings.setUsername(config.getString("mysql.username"));
         settings.setPassword(config.getString("mysql.password"));
-        settings.setTableName(config.getString("mysql.table_prefix"));
+        settings.setTablePrefix(config.getString("mysql.table_prefix"));
     }
 }

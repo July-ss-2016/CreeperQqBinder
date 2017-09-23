@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="CreeperQqBinder:jar">
+    <output-path>$PROJECT_DIR$/../../../test_servers/Spigot_1.8.8_0/plugins</output-path>
+    <root id="archive" name="CreeperQqBinder.jar">
+      <element id="module-output" name="CreeperQqBinder" />
+      <element id="file-copy" path="$PROJECT_DIR$/config.yml" />
+      <element id="file-copy" path="$PROJECT_DIR$/plugin.yml" />
+    </root>
+  </artifact>
+</component>

@@ -9,7 +9,7 @@ public class Settings {
     private String database;
     private String username;
     private String password;
-    private String tableName;
+    private String tablePrefix;
 
     public String getHost() {
         return host;
@@ -51,11 +51,11 @@ public class Settings {
         this.password = password;
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getTablePrefix() {
+        return tablePrefix;
     }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public void setTablePrefix(String tablePrefix) {
+        this.tablePrefix = tablePrefix;
     }
 }
