@@ -18,7 +18,7 @@ public class QqBinderManager {
         this.settings = plugin.getSettings();
     }
 
-    // 根据QQ获取玩家名
+    // 根据玩家名获取QQ
     public String getQqByPlayerName(final String playerName) {
         try {
             java.sql.PreparedStatement preparedStatement = sqlManager.getCon().prepareStatement("select qq from " + settings.getTablePrefix() + "playerdata" + " where player_name = '" + playerName.toLowerCase() + "'");

@@ -30,25 +30,58 @@ public class CreeperQqBinder extends JavaPlugin {
 
         loadConfig();
 
-        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
-
-        if (sqlManager.getCon() == null) {
-            MsgUtil.warring("MySQL连接失败.");
+        if (!initSql()) {
             setEnabled(false);
             return;
         }
 
         registerCommands();
-        initSql();
         runTaskReConnectTask();
-        MsgUtil.warring("MySQL初始化完毕.");
-        MsgUtil.warring("MySQL重连任务已创建.");
         MsgUtil.warring("插件初始化完毕!");
     }
 
     public void onDisable() {
         Bukkit.getScheduler().cancelTasks(this);
         sqlManager.closeSql();
+    }
+
+    public void loadConfig() {
+        FileConfiguration config = getConfig();
+
+        saveDefaultConfig();
+        reloadConfig();
+        settings.setHost(config.getString("mysql.host"));
+        settings.setPort(config.getInt("mysql.port"));
+        settings.setDatabase(config.getString("mysql.database"));
+        settings.setUsername(config.getString("mysql.username"));
+        settings.setPassword(config.getString("mysql.password"));
+        settings.setTablePrefix(config.getString("mysql.table_prefix"));
+    }
+
+    // 初始化MySQL
+    public boolean initSql() {
+        try {
+            for (String subTableName : aSubTableName) {
+                if (!sqlManager.isExistsTable(settings.getTablePrefix() + subTableName)) {
+                    if (!sqlManager.executeStatement("create table " + settings.getTablePrefix() + subTableName + "(player_name varchar(32), qq varchar(32))")) {
+                        MsgUtil.warring(subTableName + " 表创建失败!");
+                        return false;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        this.sqlManager = new SqlManager(SqlUtil.getSqlConnection(settings.getHost(), settings.getPort(), settings.getDatabase(), settings.getUsername(), settings.getPassword())); // 建立sql连接，将con传递SqlManager使用
+
+        if (sqlManager.getCon() == null) {
+            MsgUtil.warring("MySQL连接失败.");
+            return false;
+        }
+
+        return true;
     }
 
     private void runTaskReConnectTask() {
@@ -83,34 +116,5 @@ public class CreeperQqBinder extends JavaPlugin {
 
     public Settings getSettings() {
         return settings;
-    }
-
-    // 初始化MySQL
-    public void initSql() {
-        try {
-            for (String subTableName : aSubTableName) {
-                if (!sqlManager.isExistsTable(settings.getTablePrefix() + subTableName)) {
-                    if (!sqlManager.executeStatement("create table " + settings.getTablePrefix() + subTableName + "(player_name varchar(32), qq varchar(32))")) {
-                        MsgUtil.warring(subTableName + " 表创建失败!");
-                        setEnabled(false);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void loadConfig() {
-        FileConfiguration config = getConfig();
-
-        saveDefaultConfig();
-        reloadConfig();
-        settings.setHost(config.getString("mysql.host"));
-        settings.setPort(config.getInt("mysql.port"));
-        settings.setDatabase(config.getString("mysql.database"));
-        settings.setUsername(config.getString("mysql.username"));
-        settings.setPassword(config.getString("mysql.password"));
-        settings.setTablePrefix(config.getString("mysql.table_prefix"));
     }
 }
